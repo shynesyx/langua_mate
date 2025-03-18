@@ -42,6 +42,7 @@ export const sendMessage = async (message: string): Promise<{
     examples?: string[];
     practice?: string;
   };
+  audioCacheKey?: string;
 }> => {
   if (useMockResponse) {
     const mockResponse = await getMockResponse(message);
@@ -49,7 +50,8 @@ export const sendMessage = async (message: string): Promise<{
       response: mockResponse.message,
       metadata: mockResponse.metadata,
       translation: mockResponse.metadata.translation,
-      teachingPoints: mockResponse.metadata.teachingPoints
+      teachingPoints: mockResponse.metadata.teachingPoints,
+      audioCacheKey: ""
     };
   }
 
@@ -62,7 +64,8 @@ export const sendMessage = async (message: string): Promise<{
       response: response.data.message,
       metadata: response.data.metadata || {},
       translation: response.data.metadata?.translation,
-      teachingPoints: response.data.metadata?.teachingPoints
+      teachingPoints: response.data.metadata?.teachingPoints,
+      audioCacheKey: response.data.audioCacheKey
     };
   } catch (error) {
     console.error('Error sending message to API:', error);

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
 import ttsRoutes from './routes/tts';
 import chatRoutes from './routes/chat';
@@ -19,12 +20,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Serve static audio files from cache directory
+app.use('/audio', express.static(path.join(process.cwd(), 'cache/audio')));
+
 // Routes
 app.use('/api/tts', ttsRoutes);
 app.use('/api', chatRoutes);
-
-// Serve cached audio files
-app.use('/cache/audio', express.static('cache/audio'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

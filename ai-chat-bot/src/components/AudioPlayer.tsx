@@ -100,7 +100,7 @@ const SpeedControl = styled.select`
   }
 `;
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, text, language, onPlaybackEnd }) => {
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, onPlaybackEnd }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
@@ -109,153 +109,96 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, text, language, onP
   const [audioSrc, setAudioSrc] = useState<string>('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    const audio = new Audio();
-    let isMounted = true;
-
-    const setupAudioEvents = (audio: HTMLAudioElement) => {
-      const events = {
-        loadedmetadata: () => {
-          if (isMounted) {
-            setIsLoaded(true);
-            setError(null);
-            audio.playbackRate = speed;
-          }
-        },
-        canplaythrough: () => {
-          if (isMounted) {
-            setIsLoaded(true);
-            setError(null);
-          }
-        },
-        error: () => {
-          if (isMounted) {
-            setError('Failed to load audio');
-            setIsLoaded(false);
-          }
-        },
-        ended: () => {
-          if (isMounted) {
-            setIsPlaying(false);
-            onPlaybackEnd();
-          }
-        },
-        timeupdate: () => {
-          if (isMounted && audio.duration) {
-            setProgress((audio.currentTime / audio.duration) * 100);
-          }
-        }
-      };
-
-      Object.entries(events).forEach(([event, handler]) => {
-        audio.addEventListener(event, handler);
-      });
-
-      return () => {
-        Object.entries(events).forEach(([event, handler]) => {
-          audio.removeEventListener(event, handler);
-        });
-      };
-    };
-
-    const fetchAudio = async () => {
-      if (!text || !language) return;
-      
-      try {
-        setIsLoaded(false);
+  const setupAudioEvents = (audio: HTMLAudioElement) => {
+    const events = {
+      loadedmetadata: () => {
+        setIsLoaded(true);
         setError(null);
-        
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-        const response = await fetch(`${API_URL}/tts/synthesize`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, language, speed })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to synthesize speech');
-        }
-
-        const audioBlob = await response.blob();
-        if (audioBlob.size === 0) {
-          throw new Error('Received empty audio data');
-        }
-
-        if (isMounted) {
-          const audio = new Audio();
-          const cleanup = setupAudioEvents(audio);
-          const audioObjectUrl = URL.createObjectURL(audioBlob);
-          
-          setAudioSrc(audioObjectUrl);
-          audio.src = audioObjectUrl;
-          audioRef.current = audio;
-          
-          return cleanup;
-        }
-      } catch (err) {
-        console.error('Audio fetch error:', err);
+        audio.playbackRate = speed;
+      },
+      canplaythrough: () => {
+        setIsLoaded(true);
+        setError(null);
+      },
+      error: () => {
         setError('Failed to load audio');
         setIsLoaded(false);
+      },
+      ended: () => {
+        setIsPlaying(false);
+        onPlaybackEnd();
+      },
+      timeupdate: () => {
+        if (audio.duration) {
+          setProgress((audio.currentTime / audio.duration) * 100);
+        }
       }
     };
 
-    fetchAudio();
+    Object.entries(events).forEach(([event, handler]) => {
+      audio.addEventListener(event, handler);
+    });
 
     return () => {
+      Object.entries(events).forEach(([event, handler]) => {
+        audio.removeEventListener(event, handler);
+      });
+    };
+  };
+
+  useEffect(() => {
+    if (!audioUrl) return;
+
+    const audio = audioRef.current || new Audio();
+    const cleanup = setupAudioEvents(audio);
+    
+    audio.src = audioUrl;
+    audioRef.current = audio;
+    
+    return () => {
+      cleanup();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';
       }
-      if (audioSrc) {
-        URL.revokeObjectURL(audioSrc);
-        setAudioSrc('');
-      }
-      if (audio) {
-        audio.pause();
-        audio.src = '';
-        audio.load();
-      }
-      isMounted = false;
-      audioRef.current = null;
-      setIsPlaying(false);
-      setProgress(0);
-      setIsLoaded(false);
     };
-  }, [text, language, speed, onPlaybackEnd]);
-
-  useEffect(() => {
-    setIsLoaded(false);
-    setError(null);
-  }, [text, language]);
+  }, [audioUrl, speed]);
 
   const handlePlayPause = async () => {
-    const audio = audioRef.current;
-    if (!audio || !isLoaded) return;
+    if (!audioRef.current) return;
 
     try {
       if (isPlaying) {
-        audio.pause();
+        audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        await audio.play();
+        await audioRef.current.play();
         setIsPlaying(true);
       }
     } catch (err) {
       console.error('Playback error:', err);
       setError('Failed to play audio');
-      setIsPlaying(false);
     }
   };
 
+  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!audioRef.current) return;
+    const newProgress = parseFloat(e.target.value);
+    const newTime = (newProgress / 100) * audioRef.current.duration;
+    audioRef.current.currentTime = newTime;
+    setProgress(newProgress);
+  };
+
   const handleSpeedChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    
+    if (!audioRef.current) return;
     const newSpeed = parseFloat(e.target.value);
-    audio.playbackRate = newSpeed;
+    audioRef.current.playbackRate = newSpeed;
     setSpeed(newSpeed);
   };
+
+  if (!audioUrl) {
+    return null;
+  }
 
   return (
     <PlayerContainer>

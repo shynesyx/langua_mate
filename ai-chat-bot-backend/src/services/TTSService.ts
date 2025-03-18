@@ -4,6 +4,18 @@ import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 
+// Language name to code mapping
+export const languageCodes: Record<string, string> = {
+  'Japanese': 'ja',
+  'English': 'en',
+  'Spanish': 'es',
+  'French': 'fr',
+  'German': 'de',
+  'Italian': 'it',
+  'Korean': 'ko',
+  'Chinese': 'zh'
+};
+
 export class TTSService {
   private voices: Map<string, Voice[]> = new Map();
   private readonly cacheDir: string;
@@ -129,95 +141,6 @@ export class TTSService {
     }
   }
 
-  // async synthesizeToAudio(text: string, language: string, options?: TTSOptions): Promise<string> {
-  //   if (!this.isLanguageSupported(language)) {
-  //     throw this.createError('UNSUPPORTED_LANGUAGE', `Language ${language} is not supported`);
-  //   }
-
-  //   try {
-  //     // Generate cache key and path
-  //     const cacheKey = this.generateCacheKey(text, language, options);
-  //     const cachePath = path.join(this.cacheDir, cacheKey);
-  //     console.log('Attempting to synthesize audio to:', cachePath);
-
-  //     // Check if audio is already cached
-  //     try {
-  //       await fs.access(cachePath);
-  //       console.log('Using cached audio file:', cachePath);
-  //       return cachePath;
-  //     } catch {
-  //       console.log('No cached file found, generating new audio...');
-  //     }
-
-  //     const ps = new PowerShell();
-      
-  //     // Escape single quotes in the text
-  //     const escapedText = text.replace(/'/g, "''");
-  //     const psPath = cachePath.replace(/\\/g, '/');
-      
-  //     console.log('Executing PowerShell script for TTS...');
-  //     const script = `
-  //       $ErrorActionPreference = "Stop"
-  //       Write-Output "Starting TTS synthesis..."
-  //       Add-Type -AssemblyName System.Speech
-  //       $synthesizer = New-Object System.Speech.Synthesis.SpeechSynthesizer
-        
-  //       # Get all installed voices
-  //       $voices = $synthesizer.GetInstalledVoices()
-  //       Write-Output "Available voices:"
-  //       foreach ($voice in $voices) {
-  //         Write-Output "$($voice.VoiceInfo.Name) - $($voice.VoiceInfo.Culture)"
-  //       }
-        
-  //       # Try to find a voice for the specified language
-  //       $targetVoice = $voices | Where-Object { $_.VoiceInfo.Culture -like "${language}*" } | Select-Object -First 1
-  //       if ($targetVoice) {
-  //         Write-Output "Selected voice: $($targetVoice.VoiceInfo.Name)"
-  //         $synthesizer.SelectVoice($targetVoice.VoiceInfo.Name)
-  //       } else {
-  //         Write-Output "No voice found for language ${language}, using default"
-  //       }
-        
-  //       ${options?.rate ? `$synthesizer.Rate = ${Math.floor((options.rate - 1) * 10)}` : ''}
-  //       Write-Output "Setting output to wave file: ${psPath}"
-  //       $synthesizer.SetOutputToWaveFile('${psPath}')
-  //       Write-Output "Speaking text: ${escapedText}"
-  //       $synthesizer.Speak('${escapedText}')
-  //       $synthesizer.Dispose()
-  //       Write-Output "TTS synthesis completed"
-        
-  //       if (Test-Path '${psPath}') {
-  //         $fileInfo = Get-Item '${psPath}'
-  //         Write-Output "Audio file created: $($fileInfo.Length) bytes"
-  //       } else {
-  //         Write-Error "Failed to create audio file"
-  //       }
-  //     `;
-
-  //     const result = await ps.invoke(script);
-  //     console.log('PowerShell output:', result.raw);
-  //     await ps.dispose();
-
-  //     // Verify the file exists and has content
-  //     try {
-  //       const stats = await fs.stat(cachePath);
-  //       console.log(`Audio file generated successfully: ${stats.size} bytes`);
-  //       if (stats.size === 0) {
-  //         throw new Error('Audio file was created but is empty');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error verifying audio file:', error);
-  //       throw error;
-  //     }
-      
-  //     return cachePath;
-  //   } catch (err: unknown) {
-  //     const error = err as Error;
-  //     console.error('TTS error:', error);
-  //     throw this.createError('SYNTHESIS_FAILED', `Failed to synthesize speech: ${error.message}`);
-  //   }
-  // }
-
   async getVoices(language: string): Promise<Voice[]> {
     if (!this.voices.has(language)) {
       try {
@@ -281,7 +204,7 @@ export class TTSService {
     try {
       const files = await fs.readdir(this.cacheDir);
       const now = Date.now();
-      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days instead of 24 hours
+      const maxAge = 24 * 60 * 60 * 1000; // 24 hours
 
       for (const file of files) {
         const filePath = path.join(this.cacheDir, file);

@@ -19,6 +19,7 @@ export interface MessageMetadata {
     examples?: string[];
     practice?: string;
   };
+  audioCacheKey?: string;
   evaluationResult?: {
     level?: 'beginner' | 'intermediate' | 'advanced';
     score?: number;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { MessageType } from '../types';
-import { audioService } from '../services/AudioService';
+
 import AudioPlayer from './AudioPlayer';
 
 interface MessageProps {
@@ -197,24 +197,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
     message.metadata.constraints
   );
 
-  const handlePlayClick = async () => {
-    try {
-      if (isPlaying) {
-        audioService.stop();
-        setIsPlaying(false);
-      } else {
-        setIsPlaying(true);
-        await audioService.speak({
-          ...message,
-          text: messageText
-        });
-        setIsPlaying(false);
-      }
-    } catch (error) {
-      console.error('Failed to play audio:', error);
-      setIsPlaying(false);
-    }
-  };
+  const audioCacheKey = message.metadata?.audioCacheKey;
 
   return (
     <MessageContainer isUser={isUser}>
@@ -234,7 +217,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
         </MessageText>
         {!isUser && (
           <AudioPlayer 
-            audioUrl={`http://localhost:5000/api/tts/synthesize`}
+            audioUrl={`http://localhost:5000/audio/${audioCacheKey}.wav`}
             text={messageText}
             language={message.metadata?.language || 'en'}
             onPlaybackEnd={() => setIsPlaying(false)}

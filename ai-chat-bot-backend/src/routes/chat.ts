@@ -1,7 +1,9 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
+import * as path from 'path';
 import { agentManager } from '../agents/AgentManager';
 import { LanguageContext } from '../types';
+import { languageCodes, TTSService } from '../services/TTSService';
 
 // Load environment variables
 dotenv.config();
@@ -58,6 +60,13 @@ router.post('/chat', (req: Request, res: Response) => {
       
       // Route the message to the appropriate agent
       const response = await agentManager.routeMessage(message);
+
+      // Generate audio file
+      console.log('Generating audio file...');
+      const ttsService = new TTSService();
+      const languageCode = languageCodes[agentManager.getContext()?.targetLanguage || 'Japanese'];
+      const audioUrl = await ttsService.synthesizeToAudio(response.text, languageCode);
+      const audioCacheKey = path.basename(audioUrl).split('.')[0];
       
       console.log('Response metadata:', {
         language: response.metadata.language,
@@ -69,7 +78,8 @@ router.post('/chat', (req: Request, res: Response) => {
       
       return res.status(200).json({ 
         message: response.text,
-        metadata: response.metadata
+        metadata: response.metadata,
+        audioCacheKey: audioCacheKey
       });
     } catch (error) {
       console.error('Error in chat endpoint:', error);

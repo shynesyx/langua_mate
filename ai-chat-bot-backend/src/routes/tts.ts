@@ -1,25 +1,12 @@
 import express from 'express';
-import { TTSService } from '../services/TTSService';
-import { TTSOptions } from '../types/tts';
-import fs from 'fs';
+import { languageCodes, TTSService } from '../services/TTSService';
+import path from 'path';
 
 const router = express.Router();
 const ttsService = new TTSService();
 
-// Language name to code mapping
-const languageCodes: Record<string, string> = {
-  'Japanese': 'ja',
-  'English': 'en',
-  'Spanish': 'es',
-  'French': 'fr',
-  'German': 'de',
-  'Italian': 'it',
-  'Korean': 'ko',
-  'Chinese': 'zh'
-};
-
 // Synthesize text to speech
-router.post('/synthesize', async (req, res) => {
+router.post('/synthesize', async (req: express.Request, res: express.Response) => {
   console.log('Hit /api/tts/synthesize endpoint');
   try {
     const { text, language, options } = req.body;
@@ -39,37 +26,15 @@ router.post('/synthesize', async (req, res) => {
       textLength: text.length
     });
 
-    // Generate audio using Bark TTS service
+    // Generate audio using TTS service
     const audioFilePath = await ttsService.synthesizeToAudio(text, languageCode, options);
     console.log('Audio file generated:', audioFilePath);
 
-    // Check if file exists
-    if (!fs.existsSync(audioFilePath)) {
-      console.error('Audio file not found:', audioFilePath);
-      return res.status(500).json({ error: 'Failed to generate audio file' });
-    }
-
-    // Get file stats
-    const stats = fs.statSync(audioFilePath);
-    console.log('Audio file size:', stats.size, 'bytes');
-
-    // Set response headers
-    res.set({
-      'Content-Type': 'audio/wav',
-      'Content-Length': stats.size,
-      'Content-Disposition': 'attachment; filename="speech.wav"'
-    });
-
-    // Stream the file
-    const stream = fs.createReadStream(audioFilePath);
-    stream.on('error', (error) => {
-      console.error('Stream error:', error);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Failed to stream audio file' });
-      }
-    });
-
-    stream.pipe(res);
+    // Return the audio file path for streaming
+    const relativePath = path.relative(process.cwd(), audioFilePath).replace(/\\/g, '/');
+    const audioUrl = `/audio/${relativePath}`;
+    console.log(audioUrl);
+    res.json({ audioUrl });
   } catch (error: any) {
     console.error('TTS error:', error);
     if (!res.headersSent) {
@@ -79,7 +44,7 @@ router.post('/synthesize', async (req, res) => {
 });
 
 // Get available voices for a language
-router.get('/voices/:language', async (req, res) => {
+router.get('/voices/:language', async (req: express.Request, res: express.Response) => {
   try {
     const { language } = req.params;
     const voices = await ttsService.getVoices(language);
@@ -91,7 +56,7 @@ router.get('/voices/:language', async (req, res) => {
 });
 
 // Cleanup old audio files (can be called periodically)
-router.post('/cleanup', async (req, res) => {
+router.post('/cleanup', async (req: express.Request, res: express.Response) => {
   try {
     await ttsService.cleanup();
     res.json({ message: 'Cleanup completed successfully' });
@@ -101,4 +66,4 @@ router.post('/cleanup', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

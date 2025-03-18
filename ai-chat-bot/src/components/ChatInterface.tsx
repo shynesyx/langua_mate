@@ -134,6 +134,8 @@ const ChatInterface: React.FC = () => {
 
     try {
       const response = await sendMessage(input);
+
+      response.metadata.audioCacheKey = response.audioCacheKey;
       
       // Create the bot message with the response data
       const botMessage: MessageType = {
