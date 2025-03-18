@@ -152,7 +152,6 @@ Remember to format your response in JSON with both the message and its English t
   }
 
   private parseAIResponse(response: string): AIResponse {
-    console.log('Raw AI response:', response);
     try {
       // First try parsing the entire response as JSON
       try {
@@ -173,10 +172,10 @@ Remember to format your response in JSON with both the message and its English t
                   }
                   return parsed;
               } catch (jsonParseError){
+                  console.log('jsonStr:', jsonStr);
                   console.error("Error parsing extracted JSON:", jsonParseError);
                   throw e;
               }
-
           }
           throw e;
       }
@@ -189,38 +188,6 @@ Remember to format your response in JSON with both the message and its English t
             translation: 'Translation not available'
         };
     }
-
-
-    // try {
-    //   // First try parsing the entire response as JSON
-    //   try {
-    //     const parsed = JSON.parse(sanitizedResponse) as AIResponse;
-    //     if (!parsed.response || !parsed.translation) {
-    //       throw new Error('Missing required fields in response');
-    //     }
-    //     return parsed;
-    //   } catch (e) {
-    //     // If that fails, try to extract JSON from the text
-    //     const jsonMatch = sanitizedResponse.match(/```json\n([\s\S]*?)\n```/);
-    //     if (jsonMatch) {
-    //       const jsonStr = jsonMatch[1];
-    //       const parsed = JSON.parse(jsonStr) as AIResponse;
-    //       if (!parsed.response || !parsed.translation) {
-    //         throw new Error('Missing required fields in response');
-    //       }
-    //       return parsed;
-    //     }
-    //     throw e;
-    //   }
-    // } catch (error) {
-    //   console.error('Error parsing AI response:', error);
-    //   // Extract just the Japanese text if possible
-    //   const japaneseMatch = sanitizedResponse.match(/["']response["']\s*:\s*["']([^"']+)["']/);
-    //   return {
-    //     response: japaneseMatch ? japaneseMatch[1] : response,
-    //     translation: 'Translation not available'
-    //   };
-    // }
   }
 
   async process(message: string, context: LanguageContext): Promise<AgentResponse> {
