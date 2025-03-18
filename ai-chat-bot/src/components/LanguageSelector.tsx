@@ -143,7 +143,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ onContextSet }) => 
     <Container>
       <Title>Welcome to LanguaMate</Title>
       <Subtitle>
-        Choose a language to start practicing. Our AI tutor will automatically adapt to your level.
+        Your friend in the language of select will be with you momentarily.
       </Subtitle>
       <Form onSubmit={handleSubmit}>
         <FormGroup>
