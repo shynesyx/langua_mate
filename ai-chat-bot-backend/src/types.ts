@@ -41,6 +41,7 @@ export interface LanguageContext {
   sessionStartTime: Date;
   lastInteractionTime: Date;
   isLevelEvaluated?: boolean;
+  conversationHistory: { role: 'user' | 'ai'; content: string }[];
 }
 
 export interface EvaluationResult {

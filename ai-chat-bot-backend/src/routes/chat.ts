@@ -36,7 +36,8 @@ router.post('/chat', (req: Request, res: Response) => {
           grammarPoints: [],
           vocabulary: [],
           sessionStartTime: new Date(),
-          lastInteractionTime: new Date()
+          lastInteractionTime: new Date(),
+          conversationHistory: [],
         };
         
         agentManager.setContext(defaultContext);
@@ -114,7 +115,8 @@ router.post('/context', (req: Request, res: Response) => {
       grammarPoints: context.grammarPoints || [],
       vocabulary: context.vocabulary || [],
       sessionStartTime: new Date(),
-      lastInteractionTime: new Date()
+      lastInteractionTime: new Date(),
+      conversationHistory: context.conversationHistory || [],
     };
     
     agentManager.setContext(languageContext);

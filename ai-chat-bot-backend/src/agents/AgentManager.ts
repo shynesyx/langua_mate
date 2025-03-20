@@ -62,10 +62,15 @@ export class AgentManager {
       // Set fixed beginner level and skip evaluation
       this.context.currentLevel = 'beginner';
       this.context.isLevelEvaluated = true;
-      
+      // Add user message to history
+      this.context.conversationHistory.push({ role: 'user', content: message });
+      this.context.recentTopics.push(message);
+      this.context.lastInteractionTime = new Date();
       // Generate response directly
       console.log('Generating response...');
       const response = await this.responseGenerator.process(message, this.context);
+      // Add AI response to history
+      this.context.conversationHistory.push({ role: 'ai', content: response.text });
       
       // Update context with new information
       this.updateContext(response.metadata);
