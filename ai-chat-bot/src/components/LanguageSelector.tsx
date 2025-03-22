@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
+import { supabase } from '../supabaseClient'; // Import Supabase client
+import { updateTargetLanguage } from '../services/updateTargetLanguage'; // Updated import
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/';
 
@@ -16,6 +18,7 @@ const Container = styled.div`
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
+  margin-top: 30px; // Adjusted margin
 `;
 
 const Title = styled.h2`
@@ -120,17 +123,38 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ onContextSet }) => 
     setSuccess('');
 
     try {
+      // Update the context in your API
       await axios.post(`${API_URL}/context`, {
         targetLanguage,
         nativeLanguage: 'English', // Default to English for now
         currentLevel: 'beginner', // Start with beginner, will be adjusted automatically
         learningGoals: ['Conversation practice'] // Default goal
       });
-      
-      setSuccess('Great! Let\'s start practicing ' + targetLanguage);
-      setTimeout(() => {
-        onContextSet();
-      }, 1500);
+
+      // Fetch the user
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('Error fetching user:', userError);
+        throw userError;
+      }
+
+      const user = data.user; // Access the user object
+      console.log('Fetched user:', user); // Log the user object
+
+      if (user) {
+        // Call the update function
+        const updateData = await updateTargetLanguage(user.id, targetLanguage);
+        console.log('Update successful:', updateData); // Log the updated data
+
+        setSuccess('Great! Let\'s start practicing ' + targetLanguage);
+        setTimeout(() => {
+          onContextSet();
+        }, 1500);
+      } else {
+        console.error('No user found');
+        setError('User not found. Please log in again.');
+        return;
+      }
     } catch (error) {
       console.error('Error setting context:', error);
       setError('Failed to set language. Please try again.');
