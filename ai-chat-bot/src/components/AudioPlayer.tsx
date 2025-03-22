@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaPlay, FaStop } from 'react-icons/fa';
+// import { FaPlay, FaStop } from 'react-icons/fa';
+import { FaPlay as FaPlayIcon, FaStop as FaStopIcon } from 'react-icons/fa';
+
+const FaPlay = FaPlayIcon as unknown as React.FC<{ size?: number }>;
+const FaStop = FaStopIcon as unknown as React.FC<{ size?: number }>;
 
 interface AudioPlayerProps {
   audioUrl: string;
