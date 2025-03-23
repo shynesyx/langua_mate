@@ -43,6 +43,11 @@ const MessageBubble = styled.div<{ isUser: boolean }>`
   overflow-wrap: break-word;
 `;
 
+const MessageTextContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
 const MessageText = styled.div`
   margin: 0;
   font-size: 16px;
@@ -56,7 +61,6 @@ const TranslationTooltip = styled.div`
   position: absolute;
   top: 100%;
   left: 0;
-  right: 0;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
   padding: 8px 12px;
@@ -68,7 +72,15 @@ const TranslationTooltip = styled.div`
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
 
-  ${MessageText}:hover & {
+  /* Set width to match the message bubble width */
+  width: fit-content;
+  max-width: calc(100% - 24px); /* Account for the padding */
+  
+  /* Ensures text wraps properly */
+  white-space: normal;
+  word-wrap: break-word;
+
+  ${MessageTextContainer}:hover & {
     opacity: 1;
     visibility: visible;
   }
@@ -205,7 +217,17 @@ const Message: React.FC<MessageProps> = ({ message }) => {
         {isUser ? 'U' : 'AI'}
       </Avatar>
       <MessageBubble isUser={isUser}>
-        <MessageText>
+        <MessageTextContainer>
+          <MessageText>
+            {messageText}
+          </MessageText>
+          {!isUser && message.metadata?.translation && (
+            <TranslationTooltip>
+              {message.metadata.translation}
+            </TranslationTooltip>
+          )}
+        </MessageTextContainer>
+        {/* <MessageText>
           <span style={{ position: 'relative' }}>
             {messageText}
             {!isUser && message.metadata?.translation && (
@@ -214,7 +236,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
               </TranslationTooltip>
             )}
           </span>
-        </MessageText>
+        </MessageText> */}
         {!isUser && (
           <AudioPlayer 
             audioUrl={`http://localhost:5000/audio/${audioCacheKey}.wav`}
