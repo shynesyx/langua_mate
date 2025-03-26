@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient'; // Ensure you import your Supabase client
+import { supabase } from '../lib/supabaseClient'; // Ensure you import your Supabase client
 
 export const updateTargetLanguage = async (userId: string, targetLanguage: string) => {
     try {

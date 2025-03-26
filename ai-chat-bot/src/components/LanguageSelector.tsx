@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-import { supabase } from '../supabaseClient'; // Import Supabase client
+import { supabase } from '../lib/supabaseClient'; // Import Supabase client
 import { updateTargetLanguage } from '../services/updateTargetLanguage'; // Updated import
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/';

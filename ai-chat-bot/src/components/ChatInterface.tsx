@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import Message from './Message';
 import { MessageType } from '../types';
 import { sendMessage } from '../services/api';
+import { getMessages, persistMessage  } from '../services/supabaseServices';
 
 const ChatContainer = styled.div`
   width: 100%;
@@ -111,6 +112,17 @@ const ChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const fetchMessages = async () => {
+      // Fetch messages from the server
+      const data = await getMessages();
+      if (data.length > 0) {
+        setMessages(data);
+      }
+    };
+    fetchMessages();
+  }, []);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -132,6 +144,9 @@ const ChatInterface: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
+    // persist the user message to the server
+    persistMessage(userMessage);
+
     try {
       const response = await sendMessage(input);
 
@@ -147,6 +162,10 @@ const ChatInterface: React.FC = () => {
       };
 
       setMessages(prev => [...prev, botMessage]);
+
+      // persist the bot message to the server
+      persistMessage(botMessage);
+
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -198,7 +217,7 @@ const ChatInterface: React.FC = () => {
           placeholder="Type your message here..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyUp={handleKeyPress}
           disabled={isLoading}
         />
         <SendButton onClick={handleSendMessage} disabled={isLoading || input.trim() === ''}>
