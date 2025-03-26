@@ -1,11 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import supabase from "../db";
 import { UsageTracker } from "./usage-tracker";
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_KEY || ""
-);
 
 export class SupabaseUsageTracker implements UsageTracker {
   private requestCount = 0;
